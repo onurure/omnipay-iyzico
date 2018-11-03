@@ -1,17 +1,16 @@
 <?php
-namespace Omnipay\Skeleton\Message;
+
+namespace Omnipay\Iyzico\Message;
+
 /**
- * Authorize Request
- *
- * @method Response send()
+ * Iyzico Authorize Request
+ * 
+ * (c) Yasin Kuyu
+ * 2015, insya.com
+ * http://www.github.com/yasinkuyu/omnipay-iyzico
  */
-class AuthorizeRequest extends AbstractRequest
-{
-    public function getData()
-    {
-        $this->validate('amount', 'card');
-        $this->getCard()->validate();
-        $data = $this->getBaseData();
-        return $data;
-    }
+class AuthorizeRequest extends PurchaseRequest {
+
+        protected $actionType = '';
+
 }
