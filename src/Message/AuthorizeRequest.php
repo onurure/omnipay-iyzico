@@ -1,16 +1,9 @@
 <?php
 
 namespace Omnipay\Iyzico\Message;
-
 /**
- * Iyzico Authorize Request
- * 
- * (c) Yasin Kuyu
- * 2015, insya.com
- * http://www.github.com/yasinkuyu/omnipay-iyzico
+ * Iyzico Purchase Request
  */
-class AuthorizeRequest extends PurchaseRequest {
-
-        protected $actionType = '';
+class AuthorizeRequest extends PurchaseRequest{
 
 }

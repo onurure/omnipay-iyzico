@@ -1,227 +1,241 @@
 <?php
-
 namespace Omnipay\Iyzico\Message;
 
+use Omnipay\Common\CreditCard;
+use Omnipay\Common\Item;
 use Omnipay\Common\Message\AbstractRequest;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Iyzico Purchase Request
- * 
- * (c) Yasin Kuyu
- * 2015, insya.com
- * http://www.github.com/yasinkuyu/omnipay-iyzico
  */
-class PurchaseRequest extends AbstractRequest {
-
-    protected $actionType = 'CC.DB';
-    protected $endpoints = [
-        'token' => 'https://api.iyzico.com/v2/create',
-        'purchase' => 'https://iyziconnect.com/pay-with-transaction-token/',
-        'refund' => 'https://api.iyzico.com/v2/refund',
-        'status' => 'https://api.iyzico.com/getStatus'
-    ];
-
-    public function getData() {
-
-        $this->validate('card');
-        $this->getCard()->validate();
-
-        $card = $this->getCard();
-
-        $data = array(
-            'mode' => $this->getTestMode() ? "test" : "live",
-            'api_id' => $this->getApiId(),
-            'secret' => $this->getSecretKey(),
-            'installment' => true,
-            'external_id' => $this->getOrderId(),
-            'transaction_id' => $this->getTransId(),
-            'type' => $this->actionType,
-            'return_url' => $this->getReturnUrl(),
-            
-            'amount' => $this->getAmountInteger(),
-            'currency' => $this->getCurrency(),
-            'descriptor' => $this->getDescription(),
-            'customer_first_name' => $card->getBillingFirstName(),
-            'customer_last_name' => $card->getBillingLastName(),
-            'customer_company_name' => $card->getCompany(),
-            'customer_shipping_address_line_1' => $card->getShippingAddress1(),
-            'customer_shipping_address_line_2' => $card->getShippingAddress2(),
-            'customer_shipping_address_zip' => $card->getShippingPostcode(),
-            'customer_shipping_address_city' => $card->getShippingCity(),
-            'customer_shipping_address_state' => $card->getShippingState(),
-            'customer_shipping_address_country' => $card->getShippingCountry(),
-            'customer_billing_address_line_1' => $card->getBillingAddress1(),
-            'customer_billing_address_line_2' => $card->getBillingAddress2(),
-            'customer_billing_address_zip' => $card->getBillingPostcode(),
-            'customer_billing_address_city' => $card->getBillingCity(),
-            'customer_billing_address_state' => $card->getBillingState(),
-            'customer_billing_address_country' => $card->getCountry(),
-            'customer_contact_phone' => $card->getBillingPhone(),
-            'customer_contact_mobile' => $card->getBillingPhone(),
-            'customer_contact_email' => $card->getEmail(),
-            'customer_contact_ip' => $this->getClientIp(),
-            'customer_language' => 'tr',
-        );
-
-        // List products
-        $items = $this->getItems();
-        if (!empty($items)) {
-            foreach ($items as $key => $item) {
-
-                $data += array(
-                    'item_id_[' . $key . ']' => $item->getIterator(),
-                    'item_name_1[' . $key . ']' => $item->getName(),
-                    'item_unit_quantity_[' . $key . ']' => 1,
-                    'item_unit_amount_[' . $key . ']' => $item->getPrice()
-                );
-            }
-        }
-        
-        return $data;
+class PurchaseRequest extends AbstractRequest{
+    /**
+     * @var array
+     */
+    protected $endpoints = array(
+    	'production' => 'https://api.iyzipay.com',
+    	'test' => 'https://sandbox-api.iyzipay.com',
+    );
+	/**
+	 * @return mixed
+	 */
+	public function getApiKey()
+	{
+		return $this->getParameter('apiKey');
+	}
+	/**
+	 * @param $value
+	 * @return mixed
+	 */
+	public function setApiKey($value)
+	{
+		return $this->setParameter('apiKey', $value);
+	}
+	/**
+	 * @return mixed
+	 */
+	public function getSecretKey()
+	{
+		return $this->getParameter('secretKey');
+	}
+	/**
+	 * @param $value
+	 * @return mixed
+	 */
+	public function setSecretKey($value)
+	{
+		return $this->setParameter('secretKey', $value);
+	}
+    /**
+     * @param $endpoint
+     * @return mixed
+     */
+    public function getEndpoint($endpoint)
+    {
+    	return $this->getTestMode() ? $this->endpoints['test'] : $this->endpoints[$endpoint];
     }
+	/**
+	 * @return mixed
+	 */
+	public function getID(){
+		return $this->getParameter('id');
+	}
+	/**
+	 * @param $value
+	 * @return AbstractRequest
+	 */
+	public function setID($value){
+		return $this->setParameter('id',$value);
+	}
+	/**
+	 * @return mixed
+	 */
+	public function getIdentityNumber(){
+		return $this->getParameter('identityNumber');
+	}
+	/**
+	 * @param $value
+	 * @return AbstractRequest
+	 */
+	public function setIdentityNumber($value){
+		return $this->setParameter('identityNumber',$value);
+	}
+	/**
+	 * @return int
+	 * @throws \Exception
+	 */
+	public function getInstallment(){
+		$installment = $this->getParameter('installment');
+		if(false == $installment){
+			return 1;
+		}
+		if( $installment <1 || $installment >12){
+			throw new \Exception('Invalid installment number');
+		}
+		return $installment;
+	}
+	/**
+	 * @param $value
+	 * @return AbstractRequest
+	 */
+	public function setInstallment($value){
+		return $this->setParameter('installment',$value);
+	}
+	/**
+	 * The date when the order is initiated in the system, in YYYY-MM-DD HH:MM:SS format (e.g.: "2012-05-01 21:15:45")
+	 * Important: Date should be UTC standard +/-10 minutes
+	 * @return mixed
+	 */
+	public function getCallbackUrl(){
+		return $this->getParameter('callbackUrl');
+	}
+	/**
+	 * @param $value
+	 * @return AbstractRequest
+	 */
+	public function setCallbackUrl($value){
+		return $this->setParameter('callbackUrl',$value);
+	}
+		/**
+	 * The date when the order is initiated in the system, in YYYY-MM-DD HH:MM:SS format (e.g.: "2012-05-01 21:15:45")
+	 * Important: Date should be UTC standard +/-10 minutes
+	 * @return mixed
+	 */
+		public function getClientIp(){
+			return $this->getParameter('clientIP');
+		}
+	/**
+	 * @param $value
+	 * @return AbstractRequest
+	 */
+	public function setClientIp($value){
+		return $this->setParameter('clientIP',$value);
+	}
+	public function getOptions(){
+		$options = new \Iyzipay\Options();
+		$options->setApiKey($this->getApiKey());
+		$options->setSecretKey($this->getSecretKey());
+		$options->setBaseUrl($this->getEndpoint('test'));
+		return $options;
+	}
+	public function buildTransactionID($card){
+		$data = array(
+			"name"	=> $card->getName(),
+			"city"	=> $card->getBillingCity(),
+			"country" => $card->getBillingCountry(),
+			"address" => $card->getBillingAddress1(),
+			"zipcode" => $card->getBillingPostcode(),
+			"ip"	=> $this->getClientIp(),
+			"id"	=> uniqid(),
+			"timestamp"	=> date("YmdHis")
+		);
+		$data = serialize($data);
+		return hash_hmac("sha1",$data,$this->getSecretKey());
+	}
 
-    public function sendData($data) {
-
-        // Post to Iyzico
-        $headers = array(
-            'Content-Type' => 'application/x-www-form-urlencoded'
-        );
-
-        if ($this->actionType === "CC.RF") {
-
-            $httpResponse = $this->httpClient->post(
-                            $this->endpoints['refund'], 
-                            $headers, 
-                            $data
-                    )->send();
-
-            return $this->response = new Response($this, $httpResponse->getBody());
-            
-        } else {
-
-
-            $httpResponse = $this->httpClient->post(
-                            $this->endpoints['token'], $headers, $data
-                    )->send();
-
-            $token = new Response($this, $httpResponse->getBody());
-
-            $pay = array(
-                'card_number' => $this->getCard()->getNumber(),
-                'card_expiry_month' => $this->getCard()->getExpiryMonth(),
-                'card_expiry_year' => $this->getCard()->getExpiryYear(),
-                'card_verification' => $this->getCard()->getCvv(),
-                'card_holder_name' => '',
-                'card_brand' => $this->getCardProvider($this->getCard()->getNumber()),
-                'pay' => 'Ödeme Yap',
-                'version' => '1.0',
-                'response_mode' => 'SYNC', //todo 3D->ASYNC
-                'enable_3d_secure' => false,
-                'currency' => $this->getCurrency(),
-                'transaction_token' => $token->getCode(),
-                'installment-option' => $this->getInstallment(),
-                'connector_type' => $this->getBank(),
-                'mode' => $this->getTestMode() ? "test" : "live",
-            );
-
-            $httpResponsePay = $this->httpClient->post(
-                            $this->endpoints['purchase'], $headers, $pay, ['allow_redirects' => false]
-                    )->send();
-
-            return $this->response = new Response($this, $httpResponsePay->getBody());
-        }
-    }
+	/**
+	* @return array
+	* @throws \Omnipay\Common\Exception\InvalidCreditCardException
+	*/
+	public function getData(){
+		$options = $this->getOptions();
+		// If card is not valid then throw InvalidCreditCardException.
+		$creditCard = new \Iyzipay\Model\PaymentCard();
+		$card = $this->getCard();
+		$card->validate();
+		$creditCard->setCardHolderName($card->getName());
+		$creditCard->setCardNumber($card->getNumber());
+		$creditCard->setExpireMonth($card->getExpiryMonth());
+		$creditCard->setExpireYear($card->getExpiryYear());
+		$creditCard->setCvc($card->getCvv());
+//		$creditCard->setRegisterCard(false); // todo
+		$billingAddress = new \Iyzipay\Model\Address();
+		$billingAddress->setContactName($card->getName());
+		$billingAddress->setCity($card->getBillingCity());
+		$billingAddress->setCountry($card->getBillingCountry());
+		$billingAddress->setAddress($card->getBillingAddress1());
+		$billingAddress->setZipCode($card->getBillingPostcode());
+		$buyer = new \Iyzipay\Model\Buyer();
+		$buyer->setId($card->getFirstname());
+		$buyer->setRegistrationDate(date('Y-m-d H:i:s'));
+		$buyer->setRegistrationAddress($card->getBillingAddress1());
+		$buyer->setZipCode($card->getBillingPostcode());
+		$buyer->setIp($this->getClientIp());
+		$buyer->setName($card->getFirstname());
+		$buyer->setSurname($card->getLastname());
+		$buyer->setEmail($card->getEmail());
+		$buyer->setIdentityNumber($this->getIdentityNumber());
+		$buyer->setCity($card->getCity());
+		$buyer->setCountry($card->getCountry());
+		$basket = new \Iyzipay\Model\BasketItem();
+		$items = $this->getItems();
+		$basketItems = array();
+		$amount = 0;
+		if( !empty($items)){
+			foreach ($items as $key => $item) {
+				$basket->setId($key);
+				$basket->setName($item->getName());
+				$basket->setCategory1($item->getName());
+				$basket->setItemType("VIRTUAL");
+				$basket->setPrice($item->getPrice());
+				$basketItems[] = $basket;
+				$amount += $item->getPrice();
+			}
+		}
+        // todo
+		$data = new \Iyzipay\Request\CreatePaymentRequest();
+		$data->setPaidPrice($amount);
+		$data->setPrice($amount);
+		$data->setLocale(\Iyzipay\Model\Locale::TR);
+		$data->setCurrency(\Iyzipay\Model\Currency::TL);
+		$data->setConversationId($this->buildTransactionID($card));
+		$data->setPaymentChannel(\Iyzipay\Model\PaymentChannel::WEB);
+		$data->setPaymentGroup(\Iyzipay\Model\PaymentGroup::SUBSCRIPTION);
+		$data->setPaymentCard($creditCard);
+		$data->setInstallment($this->getInstallment());
+		$data->setBuyer($buyer);
+		$data->setBillingAddress($billingAddress);
+		$data->setBasketItems($basketItems);
+		$data->setCallbackUrl($this->getcallbackUrl());
+		$payment = \Iyzipay\Model\ThreedsInitialize::create($data, $options);
+		return $payment;
+	}
+	/**
+     * @param $data
+     * @return Response
+     */
+	protected function createResponse($data)
+	{
+		return $this->response = new Response($this, $data);
+	}
 
     /**
-     * 
-     * Get credit cart provider
-     * 
-     * @param int $cardNumber
-     * @return string
+     * @param $data
+     * @return PurchaseResponse
      */
-    protected function getCardProvider($cardNumber) {
-        $brand = "Invalid";
-        $digitLength = strlen($cardNumber);
-        switch ($digitLength) {
-            case 15:
-                if (substr($cardNumber, 0, 2) == "34" ||
-                        substr($cardNumber, 0, 2) == "37") {
-                    $brand = "AMEX";
-                }
-                break;
-            case 13:
-                if (substr($cardNumber, 0, 1) == "4") {
-                    $brand = "VISA";
-                }
-                break;
-            case 16:
-                if (substr($cardNumber, 0, 1) == "4") {
-                    $brand = "VISA";
-                } else if (substr($cardNumber, 0, 4) == "6011") {
-                    $brand = "DISCOVER";
-                } else if (intval(substr($cardNumber, 0, 2)) >= 51 &&
-                        intval(substr($cardNumber, 0, 2)) <= 55) {
-                    $brand = "MASTER";
-                }
-                break;
-        }
-        return $brand;
+    public function sendData($data)
+    {
+    	return new PurchaseResponse($this,$data);
     }
-
-    public function getBank() {
-        return $this->getParameter('bank');
-    }
-
-    public function setBank($value) {
-        return $this->setParameter('bank', $value);
-    }
-
-    public function getApiId() {
-        return $this->getParameter('apiId');
-    }
-
-    public function setApiId($value) {
-        return $this->setParameter('apiId', $value);
-    }
-
-    public function getSecretKey() {
-        return $this->getParameter('secretKey');
-    }
-
-    public function setSecretKey($value) {
-        return $this->setParameter('secretKey', $value);
-    }
-
-    public function getInstallment() {
-        return $this->getParameter('installment');
-    }
-
-    public function setInstallment($value) {
-        return $this->setParameter('installment', $value);
-    }
-
-    public function getType() {
-        return $this->getParameter('type');
-    }
-
-    public function setType($value) {
-        return $this->setParameter('type', $value);
-    }
-
-    public function getOrderId() {
-        return $this->getParameter('orderid');
-    }
-
-    public function setOrderId($value) {
-        return $this->setParameter('orderid', $value);
-    }
-
-    public function getTransId() {
-        return $this->getParameter('transId');
-    }
-
-    public function setTransId($value) {
-        return $this->setParameter('transId', $value);
-    }
-
 }
