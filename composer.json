@@ -1,6 +1,7 @@
 {
     "name": "onurure/omnipay-iyzico",
     "description": "Iyzico for omnipay 3 ",
+    "type": "library",
     "keywords": [
         "omnipay",
         "iyzico"
@@ -24,22 +25,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Omnipay\\Iyzico\\": "src"
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "League\\Iyzico\\Test\\": "tests"
-        }
-    },
-    "scripts": {
-        "test": "phpunit",
-        "check-style": "phpcs -p --standard=PSR2 src/",
-        "fix-style": "phpcbf -p --standard=PSR2 src/"
-    },
-    "extra": {
-        "branch-alias": {
-            "dev-master": "1.0-dev"
+            "Omnipay\\Iyzico\\": "src/"
         }
     },
     "minimum-stability": "dev",
