@@ -16,7 +16,8 @@
         }
     ],
     "require": {
-        "omnipay/common": "^3"
+        "omnipay/common": "^3",
+        "iyzico/iyzipay-php": "~2.0"
     },
     "require-dev": {
         "omnipay/tests": "^3",
