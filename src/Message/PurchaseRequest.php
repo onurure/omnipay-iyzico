@@ -217,8 +217,9 @@ class PurchaseRequest extends AbstractRequest{
 		$data->setBuyer($buyer);
 		$data->setBillingAddress($billingAddress);
 		$data->setBasketItems($basketItems);
-		$data->setCallbackUrl($this->getcallbackUrl());
-		$payment = \Iyzipay\Model\ThreedsInitialize::create($data, $options);
+		// $data->setCallbackUrl($this->getcallbackUrl());
+		// $payment = \Iyzipay\Model\ThreedsInitialize::create($data, $options);
+		$payment = \Iyzipay\Model\Payment::create($data, $options);
 		return $payment;
 	}
 	/**

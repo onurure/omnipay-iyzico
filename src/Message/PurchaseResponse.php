@@ -17,10 +17,10 @@ class PurchaseResponse extends AbstractResponse
 	public function isSuccessful()
     {
         //$this->validateResponse();
-        if(!isset($this->data['status'])){
+        if($this->data->getStatus()===null){
             return false;
         }
-        return $this->data['status'] == 'success';
+        return $this->data->getStatus() == 'success';
     }
 
     public function getRedirectData(){
